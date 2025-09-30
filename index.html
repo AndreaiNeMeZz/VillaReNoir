@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Interattivo di Villa ReNoir</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: Ho progettato l'applicazione come una singola pagina con navigazione a scroll per sezioni tematiche (Accesso, Esterni, Interni). Ogni punto del tour è una "card" interattiva. Cliccando su una card si apre una modale per visualizzare le foto in alta risoluzione. Questa struttura è stata scelta per trasformare un report testuale in un'esperienza di esplorazione visiva e intuitiva, più coinvolgente di una semplice tabella. -->
+    <!-- Visualization & Content Choices: Il report originale era una tabella di testo e nomi di file. L'obiettivo era creare un tour visivo. Ho scelto di presentare le informazioni tramite card interattive. L'interazione principale è il click sul pulsante "Mostra Foto", che apre una modale (lightbox) con l'immagine corrispondente. Questa scelta focalizza l'attenzione dell'utente su un'immagine alla volta, migliorando l'esperienza. La logica è gestita interamente con Vanilla JavaScript. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-image {
+            max-height: 80vh;
+            max-width: 90vw;
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 text-neutral-800">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-neutral-900">Villa ReNoir</h1>
+                <nav class="hidden md:flex items-center space-x-6">
+                    <a href="#accesso" class="text-neutral-600 hover:text-neutral-900 transition-colors">Accesso</a>
+                    <a href="#esterni" class="text-neutral-600 hover:text-neutral-900 transition-colors">Aree Esterne</a>
+                    <a href="#interni" class="text-neutral-600 hover:text-neutral-900 transition-colors">Interni</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl">Tour Virtuale della Villa</h2>
+            <p class="mt-4 text-lg text-neutral-600 max-w-2xl mx-auto">Esplora ogni angolo di Villa ReNoir attraverso il nostro tour fotografico interattivo. Clicca su "Mostra Foto" per visualizzare le immagini di ogni area.</p>
+        </div>
+
+        <section id="accesso" class="mb-16">
+            <h3 class="text-3xl font-bold text-neutral-900 border-b-2 border-neutral-200 pb-2 mb-8">I. Accesso e Viali</h3>
+            <div id="accesso-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            </div>
+        </section>
+
+        <section id="esterni" class="mb-16">
+            <h3 class="text-3xl font-bold text-neutral-900 border-b-2 border-neutral-200 pb-2 mb-8">II. Aree Esterne per Eventi</h3>
+            <div id="esterni-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            </div>
+        </section>
+
+        <section id="interni">
+            <h3 class="text-3xl font-bold text-neutral-900 border-b-2 border-neutral-200 pb-2 mb-8">III. Interni (Salone delle Feste)</h3>
+            <div id="interni-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white mt-16 border-t border-neutral-200">
+        <div class="container mx-auto px-6 py-8 text-center text-neutral-500">
+            <p>&copy; 2025 Tour Interattivo di Villa ReNoir. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <div id="image-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-4 relative max-w-4xl w-full">
+            <button onclick="closeModal()" class="absolute -top-4 -right-4 bg-white rounded-full h-10 w-10 flex items-center justify-center text-2xl text-neutral-800 shadow-lg">&times;</button>
+            <div class="flex items-center justify-between">
+                <button id="prev-btn" class="p-2 text-3xl text-neutral-600 hover:text-neutral-900 transition-colors">&#8249;</button>
+                <img id="modal-img" src="" alt="Vista ingrandita" class="modal-image object-contain rounded-md">
+                <button id="next-btn" class="p-2 text-3xl text-neutral-600 hover:text-neutral-900 transition-colors">&#8250;</button>
+            </div>
+             <p id="modal-caption" class="text-center mt-2 text-sm text-neutral-600 font-medium"></p>
+        </div>
+    </div>
+
+    <script>
+        const tourData = {
+            accesso: [
+                { seq: 1, title: "Ingresso Principale", desc: "Cancello d'accesso e insegna. Punto di arrivo per gli ospiti.", photos: ["IMG_3830.jpg"] },
+                { seq: 2, title: "Viale di Servizio/Parcheggio", desc: "Area pavimentata laterale (carraia) che conduce verso l'interno.", photos: ["IMG_3828.jpg"] },
+                { seq: 3, title: "Viale d'Accesso al Giardino", desc: "Viale principale con siepe alta, che precede l'area eventi.", photos: ["IMG_3829.jpg"] },
+                { seq: 4, title: "Arco di Ingresso al Giardino", desc: "Struttura ad arco in ferro battuto bianco che funge da portale per l'area ricevimenti.", photos: ["IMG_2108.jpg"] }
+            ],
+            esterni: [
+                { seq: 5, title: "Giardino Principale", desc: "Vasto prato sintetico allestito con tavoli e sedute per aperitivi e banchetti.", photos: ["IMG_3814.jpg", "IMG_3812.jpg"] },
+                { seq: 6, title: "Area Coperta (Gazebo)", desc: "Zona rialzata con pavimentazione in legno e copertura, con tavoli per eventi.", photos: ["IMG_3811.jpg", "IMG_2114.jpg"] },
+                { seq: 7, title: "Facciata e Piscina", desc: "La facciata in stile classico della villa che si affaccia sulla grande piscina.", photos: ["IMG_3813.jpg", "IMG_2106.jpg"] },
+                { seq: 8, title: "Dettaglio Bordo Piscina", desc: "Prospettiva laterale con la passerella in legno e i cipressi.", photos: ["IMG_2111.jpg", "IMG_2112.jpg"] },
+                { seq: 9, title: "Connessione Esterno/Interno", desc: "Area piastrellata adiacente con balaustre decorative che collegano visivamente alla piscina.", photos: ["IMG_2104.jpg", "IMG_3825.jpg"] },
+                { seq: 10, title: "Dehor Bar", desc: "Struttura laterale moderna e coperta, con zona bar e sedute di design.", photos: ["IMG_2102.jpg", "IMG_2103.jpg", "IMG_3826.jpg"] }
+            ],
+            interni: [
+                { seq: 11, title: "Zona Accoglienza/Lounge", desc: "Area all'ingresso con divano circolare e parete a specchi, per l'accoglienza.", photos: ["IMG_3818 ingresso.jpg"] },
+                { seq: 12, title: "Salone Centrale - Vista Archi", desc: "Ampio salone con pavimento a scacchi, colonne e grandi archi.", photos: ["IMG_3816.jpg", "IMG_3824.jpg"] },
+                { seq: 13, title: "Salone Centrale - Vista Soffitto", desc: "Prospettiva che evidenzia il soffitto a cassettoni e i lampadari.", photos: ["IMG_3821.jpg", "IMG_3823.jpg"] },
+                { seq: 14, title: "Area Palco / Pista da Ballo", desc: "Zona attrezzata con impianto audio/video e palco rialzato.", photos: ["IMG_3822.jpg"] },
+                { seq: 15, title: "Passaggio Sale Secondarie", desc: "Corridoi o archi che conducono a sale interne più piccole o riservate.", photos: ["IMG_3819.jpg"] },
+                { seq: 16, title: "Uscita sul Giardino", desc: "Vetrata scorrevole che collega direttamente il salone con il prato esterno.", photos: ["IMG_3817.jpg"] },
+                { seq: 17, title: "Sala a Vetrate (Conservatory)", desc: "Spazio adiacente al salone, chiuso da vetri, con vista sull'esterno.", photos: ["IMG_3820.jpg"] }
+            ]
+        };
+
+        function createCard(item) {
+            const photosJson = JSON.stringify(item.photos);
+            return `
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform transform hover:-translate-y-1">
+                    <div class="p-6 flex flex-col h-full">
+                        <div class="flex-grow">
+                            <span class="text-sm font-semibold text-teal-600">Passo ${item.seq}</span>
+                            <h4 class="mt-1 text-xl font-bold text-neutral-900">${item.title}</h4>
+                            <p class="mt-2 text-neutral-600 text-base">${item.desc}</p>
+                        </div>
+                        <div class="mt-6">
+                            <button onclick='openModal(${photosJson})' class="w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">
+                                Mostra Foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const accessoContainer = document.getElementById('accesso-cards');
+            const esterniContainer = document.getElementById('esterni-cards');
+            const interniContainer = document.getElementById('interni-cards');
+
+            tourData.accesso.forEach(item => accessoContainer.innerHTML += createCard(item));
+            tourData.esterni.forEach(item => esterniContainer.innerHTML += createCard(item));
+            tourData.interni.forEach(item => interniContainer.innerHTML += createCard(item));
+
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-img');
+            const modalCaption = document.getElementById('modal-caption');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            let currentPhotos = [];
+            let currentIndex = 0;
+
+            function openModal(photoFiles) {
+                currentPhotos = photoFiles;
+                currentIndex = 0;
+                updateModalContent();
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            function updateModalContent() {
+                const photoFile = currentPhotos[currentIndex];
+                // MODIFICA CRITICA: Uso del percorso relativo alla cartella 'foto'
+                modalImg.src = `./foto/${photoFile}`; 
+                modalCaption.textContent = `${photoFile} (${currentIndex + 1} di ${currentPhotos.length})`;
+                
+                prevBtn.style.display = currentPhotos.length > 1 ? 'block' : 'none';
+                nextBtn.style.display = currentPhotos.length > 1 ? 'block' : 'none';
+            }
+
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length;
+                updateModalContent();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % currentPhotos.length;
+                updateModalContent();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (!modal.classList.contains('hidden')) {
+                    if (e.key === 'Escape') closeModal();
+                    if (e.key === 'ArrowLeft') prevBtn.click();
+                    if (e.key === 'ArrowRight') nextBtn.click();
+                }
+            });
+
+            // Espongo openModal e closeModal a livello globale in modo che i pulsanti HTML (onclick) possano accedervi
+            window.openModal = openModal;
+            window.closeModal = closeModal;
+        });
+    </script>
+</body>
+</html>
