@@ -158,8 +158,8 @@
 
             function updateModalContent() {
                 const photoFile = currentPhotos[currentIndex];
-                // MODIFICA CRITICA: Uso del percorso relativo alla cartella 'foto'
-                modalImg.src = `./foto/${photoFile}`; 
+                // MODIFICA CRITICA: Uso del percorso relativo alla stessa directory (rimosso './foto/')
+                modalImg.src = `./${photoFile}`; 
                 modalCaption.textContent = `${photoFile} (${currentIndex + 1} di ${currentPhotos.length})`;
                 
                 prevBtn.style.display = currentPhotos.length > 1 ? 'block' : 'none';
